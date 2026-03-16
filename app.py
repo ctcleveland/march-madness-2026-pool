@@ -78,26 +78,37 @@ if not show_admin:
         st.write("**Your locked picks:**", default_teams)
         st.write("**Your tiebreaker:**", default_tiebreaker)
     else:
-        with st.form("pick_form", clear_on_submit=False):
-            selected_teams = st.multiselect(
-                "Select your 8 teams (any combination)",
-                all_teams,
-                default=default_teams,
-                max_selections=8
-            )
-            st.divider()
-            st.write("")  
-            st.write("")  
-            st.write("")  
-            tiebreaker = st.text_input(
-                "Tiebreaker - Final game score (just the two scores, e.g. 81 - 74)",
-                value=default_tiebreaker,
-                help="Example: 81 - 74"
-            )
-            submitted = st.form_submit_button("✅ Save My Picks")  # always clickable
+        # Team picker (always visible)
+        selected_teams = st.multiselect(
+            "Select your 8 teams (any combination)",
+            all_teams,
+            default=default_teams,
+            max_selections=8
+        )
 
-        if submitted:
-            # Validation on click only
+        # MASSIVE SPACING — 10 blank lines so dropdown can never hide tiebreaker
+        st.divider()
+        st.write("")  
+        st.write("")  
+        st.write("")  
+        st.write("")  
+        st.write("")  
+        st.write("")  
+        st.write("")  
+        st.write("")  
+        st.write("")  
+        st.write("")  
+        st.write("")  
+
+        tiebreaker = st.text_input(
+            "Tiebreaker - Final game score (just the two scores, e.g. 81 - 74)",
+            value=default_tiebreaker,
+            help="Example: 81 - 74"
+        )
+
+        # Always-clickable button
+        if st.button("✅ Save My Picks"):
+            # Validation only on click
             seed_count = {}
             for team in selected_teams:
                 if "#" in team:
@@ -108,9 +119,9 @@ if not show_admin:
             violations = [f"Seed {s}" for s, cnt in seed_count.items() if cnt > 1]
 
             if violations:
-                st.error(f"❌ You picked more than one team from these seeds: {', '.join(violations)}\n\nFix it and try Save again.")
+                st.error(f"❌ You picked more than one team from these seeds: {', '.join(violations)}\n\nFix it and click Save My Picks again.")
             elif len(selected_teams) != 8:
-                st.error(f"❌ You must pick exactly 8 teams (you have {len(selected_teams)}). Fix it and try Save again.")
+                st.error(f"❌ You must pick exactly 8 teams (you have {len(selected_teams)}). Fix it and click Save My Picks again.")
             elif not tiebreaker:
                 st.error("❌ Tiebreaker is required (just the two final scores, e.g. 81 - 74).")
             else:
