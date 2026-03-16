@@ -64,7 +64,10 @@ if not is_admin:
             default=default_teams,
             max_selections=8
         )
-        st.divider()  # ← clear visual separation
+        st.divider()
+        st.write("")          # ← extra line
+        st.write("")          # ← extra line
+        st.write("")          # ← extra line (this gives you the 2-3 lines you asked for)
         tiebreaker = st.text_input(
             "Tiebreaker - Final game score (just the two scores, e.g. 81 - 74)",
             value=default_tiebreaker,
