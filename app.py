@@ -46,7 +46,7 @@ password = st.sidebar.text_input("Password", type="password")
 login_button = st.sidebar.button("Login", key="login_btn")
 
 if st.sidebar.button("Forgot Password?", key="forgot_btn"):
-    st.sidebar.info("**Forgot your password?**\n\nContact Stephanie Dougherty:\n- Email: sdougherty5@cox.net\n- Text: (949) 290-0063")
+    st.sidebar.info("**Forgot your password?**\n\nContact Stephanie via email or text for assistance.")
 
 if not login_button:
     st.stop()
@@ -152,5 +152,3 @@ else:
         with open(DATA_FILE, "w") as f:
             json.dump(data, f)
         st.success("Saved!")
-
-# No extra global button anymore — everything is handled by the button you actually need
