@@ -79,53 +79,50 @@ if not show_admin:
         default_teams = existing.get("picks", [])
         default_tiebreaker = existing.get("tiebreaker", "")
 
+        # LIVE MULTISELECT + VALIDATION (updates instantly)
+        selected_teams = st.multiselect(
+            "Select your 8 teams (any combination)",
+            all_teams,
+            default=default_teams,
+            max_selections=8
+        )
+
+        # Real-time rule check
+        seed_count = {}
+        for team in selected_teams:
+            if "#" in team:
+                seed = team.split("#")[-1].split(")")[0].strip()
+                if seed.isdigit() and int(seed) <= 6:
+                    seed_count[seed] = seed_count.get(seed, 0) + 1
+
+        violations = [f"Seed {s}" for s, cnt in seed_count.items() if cnt > 1]
+
+        if violations:
+            st.error(f"❌ **Cannot save** — Only ONE team per seed 1–6 allowed.\nMultiple from: {', '.join(violations)}")
+        elif len(selected_teams) != 8:
+            st.warning(f"⚠️ You have selected **{len(selected_teams)} of 8 teams**. Pick exactly 8 to enable Save.")
+
+        # Form only for tiebreaker + submit (button disabled until valid)
         with st.form("pick_form", clear_on_submit=False):
-            selected_teams = st.multiselect(
-                "Select your 8 teams (any combination)",
-                all_teams,
-                default=default_teams,
-                max_selections=8
-            )
-
-            # LIVE VALIDATION (runs on every change)
-            seed_count = {}
-            for team in selected_teams:
-                if "#" in team:
-                    seed = team.split("#")[-1].split(")")[0].strip()
-                    if seed.isdigit() and int(seed) <= 6:
-                        seed_count[seed] = seed_count.get(seed, 0) + 1
-
-            violations = [f"Seed {s}" for s, cnt in seed_count.items() if cnt > 1]
-
-            if violations:
-                st.error(f"❌ **Cannot save** — You can only pick **one** team from each seed 1–6.\nYou have multiple from: {', '.join(violations)}")
-            elif len(selected_teams) != 8:
-                st.warning(f"⚠️ You must select exactly 8 teams (you have {len(selected_teams)})")
-
             tiebreaker = st.text_input(
                 "Tiebreaker - Final game score (just the two scores, e.g. 81 - 74)",
                 value=default_tiebreaker,
                 help="Example: 81 - 74"
             )
 
-            # Button is disabled until everything is valid
             can_save = (len(selected_teams) == 8) and len(violations) == 0
             submitted = st.form_submit_button("✅ Save My Picks", disabled=not can_save)
 
         if submitted:
-            # Final safety check (should never trigger because button was disabled)
-            if len(selected_teams) != 8 or violations:
-                st.error("Please fix the errors above before saving.")
-            else:
-                data["entries"][user_email] = {
-                    "name": user_email,
-                    "picks": selected_teams,
-                    "tiebreaker": tiebreaker,
-                    "score": existing.get("score", 0)
-                }
-                with open(DATA_FILE, "w") as f:
-                    json.dump(data, f)
-                st.success("Picks saved! 🎉 You can edit anytime before noon tomorrow.")
+            data["entries"][user_email] = {
+                "name": user_email,
+                "picks": selected_teams,
+                "tiebreaker": tiebreaker,
+                "score": existing.get("score", 0)
+            }
+            with open(DATA_FILE, "w") as f:
+                json.dump(data, f)
+            st.success("Picks saved! 🎉 You can edit anytime before noon tomorrow.")
 
 # ====================== ADMIN DASHBOARD ======================
 else:
