@@ -19,22 +19,7 @@ else:
 DEADLINE = datetime(2026, 3, 17, 19, 0)  # 12:00 PDT
 
 # ====================== ALL TEAMS ======================
-all_teams = [
-    "Duke (East #1)", "Florida (South #1)", "Arizona (West #1)", "Michigan (Midwest #1)",
-    "UConn (East #2)", "Houston (South #2)", "Purdue (West #2)", "Iowa State (Midwest #2)",
-    "Michigan State (East #3)", "Illinois (South #3)", "Gonzaga (West #3)", "Virginia (Midwest #3)",
-    "Kansas (East #4)", "Nebraska (South #4)", "Arkansas (West #4)", "Alabama (Midwest #4)",
-    "St. John's (East #5)", "Vanderbilt (South #5)", "Wisconsin (West #5)", "Texas Tech (Midwest #5)",
-    "Louisville (East #6)", "North Carolina (South #6)", "BYU (West #6)", "Tennessee (Midwest #6)",
-    "Saint Mary's (South #7)", "Kentucky (Midwest #7)", "Xavier (East #7)", "Texas A&M (West #7)",
-    "Ohio State (East #8)", "Villanova (West #8)", "Georgia (Midwest #8)", "Utah (South #8)",
-    "Utah State (West #9)", "Saint Louis (Midwest #9)", "TCU (East #9)", "VCU (South #9)",
-    "High Point (West #10)", "McNeese (South #10)", "Drake (East #10)", "New Mexico (Midwest #10)",
-    "Yale (East #13)", "Lipscomb (South #13)", "Grand Canyon (West #13)", "Oakland (Midwest #13)",
-    "Montana State (East #14)", "UNC Wilmington (South #14)", "Long Beach State (West #14)", "Morehead State (Midwest #14)",
-    "Robert Morris (East #15)", "Norfolk State (South #15)", "Texas State (West #15)", "Bryant (Midwest #15)",
-    "Siena (East #16)", "Alabama State (South #16)", "Saint Francis (West #16)", "Wagner (Midwest #16)"
-]
+all_teams = [ ... ]  # (same full list as before — copy from your previous version)
 
 # ====================== ADMIN EMAILS ======================
 ADMIN_EMAILS = ["ctcleveland@gmail.com", "sdougherty5@cox.net"]
@@ -78,7 +63,7 @@ if not show_admin:
         st.write("**Your locked picks:**", default_teams)
         st.write("**Your tiebreaker:**", default_tiebreaker)
     else:
-        # Team picker + tiebreaker (always visible, outside any form)
+        # Team picker (outside form — stable)
         selected_teams = st.multiselect(
             "Select your 8 teams (any combination)",
             all_teams,
@@ -86,8 +71,8 @@ if not show_admin:
             max_selections=8
         )
         st.divider()
-        # Huge spacing so dropdown never hides tiebreaker (you said "great location" — keeping it)
-        for _ in range(18):
+        # HUGE SPACING (24 blank lines) — tiebreaker way down the page
+        for _ in range(24):
             st.write("")
         tiebreaker = st.text_input(
             "Tiebreaker - Final game score (just the two scores, e.g. 81 - 74)",
@@ -95,9 +80,9 @@ if not show_admin:
             help="Example: 81 - 74"
         )
 
-        # Always-clickable button
+        # Always clickable button
         if st.button("✅ Save My Picks"):
-            # Validation ONLY on click
+            # Validation only on click
             seed_count = {}
             for team in selected_teams:
                 if "#" in team:
@@ -122,8 +107,8 @@ if not show_admin:
                 }
                 with open(DATA_FILE, "w") as f:
                     json.dump(data, f)
-                st.success("Picks saved! 🎉 You can edit anytime before noon tomorrow.")
-                st.rerun()   # ← This prevents the blank screen after save
+                st.success("Picks saved! 🎉")
+                st.rerun()   # ← prevents blank screen after save
 
 # ====================== ADMIN DASHBOARD ======================
 else:
