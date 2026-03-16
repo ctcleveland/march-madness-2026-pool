@@ -64,7 +64,7 @@ if is_admin:
 
 st.sidebar.success(f"Logged in as {user_email}")
 
-# ====================== PLAYER VIEW (default for everyone) ======================
+# ====================== PLAYER VIEW ======================
 if not show_admin:
     st.header(f"👋 Welcome {user_email}, enter your 8 picks")
     st.info("**Rules**: Exactly 8 teams • At most ONE team from seeds 1–6 • Any number of 7+ seeds OK")
@@ -131,7 +131,7 @@ else:
         if data["entries"]:
             df = pd.DataFrame.from_dict(data["entries"], orient="index")
             df["Payment Confirmed"] = [data["payments"].get(k, False) for k in df.index]
-            edited = st.data_editor(df, width="stretch")  # fixed deprecation
+            edited = st.data_editor(df, width="stretch")
             for idx in edited.index:
                 data["payments"][idx] = edited.loc[idx, "Payment Confirmed"]
             st.success("✅ Payments updated live")
@@ -148,13 +148,9 @@ else:
             lb = pd.DataFrame.from_dict(data["entries"], orient="index")[["name", "score"]]
             st.dataframe(lb.sort_values("score", ascending=False))
 
-    if st.button("💾 Save All Changes", key="admin_save"):
+    if st.button("💾 Save Payment Changes", key="admin_save"):
         with open(DATA_FILE, "w") as f:
             json.dump(data, f)
         st.success("Saved!")
 
-# ====================== GLOBAL SAVE ======================
-if st.button("💾 Save All Changes", key="global_save"):
-    with open(DATA_FILE, "w") as f:
-        json.dump(data, f)
-    st.success("Everything saved!")
+# No extra global button anymore — everything is handled by the button you actually need
