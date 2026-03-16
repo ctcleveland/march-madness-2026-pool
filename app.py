@@ -32,28 +32,40 @@ all_teams = [
     "Siena (East #16)", "Alabama State (South #16)", "Saint Francis (West #16)", "Wagner (Midwest #16)"
 ]
 
-# ====================== SIMPLE PASSWORD ======================
-password = st.sidebar.text_input("Enter password", type="password")
-is_admin = False
-user_name = "Player"
+# ====================== LOGIN FORM (Email is unique ID) ======================
+st.sidebar.header("Login")
+email = st.sidebar.text_input("Your Email Address", placeholder="you@email.com")
+password = st.sidebar.text_input("Password", type="password")
 
-if password == "march2026":
-    is_admin = True
-    user_name = "Admin"
-elif password == "player2026":
-    user_name = "Player"
-else:
-    st.warning("Enter password to continue (march2026 for admin, player2026 for player)")
+col1, col2 = st.sidebar.columns([3, 1])
+login_button = col1.button("Login")
+forgot_button = col2.button("Forgot Password?")
+
+if forgot_button:
+    st.sidebar.info("**Forgot your password?**\n\nContact Stephanie Dougherty:\n- Email: sdougherty5@cox.net\n- Text: (949) 290-0063\nShe will reset it for you.")
+
+if not login_button:
     st.stop()
 
-st.sidebar.success(f"Logged in as {user_name}")
+# Password check
+is_admin = False
+if password == "march2026":
+    is_admin = True
+elif password == "player2026":
+    is_admin = False
+else:
+    st.error("Incorrect password")
+    st.stop()
+
+user_email = email.strip().lower()
+st.sidebar.success(f"Logged in as {user_email} {'(Admin)' if is_admin else ''}")
 
 # ====================== PLAYER FORM ======================
 if not is_admin:
-    st.header(f"👋 {user_name}, enter your 8 picks")
+    st.header(f"👋 Welcome {user_email}, enter your 8 picks")
     st.info("**Rules**: Exactly 8 teams • At most ONE team from seeds 1–6 • Any number of 7+ seeds OK")
 
-    existing = data["entries"].get(user_name, {})
+    existing = data["entries"].get(user_email, {})
     default_teams = existing.get("picks", [])
     default_tiebreaker = existing.get("tiebreaker", "")
 
@@ -65,9 +77,9 @@ if not is_admin:
             max_selections=8
         )
         st.divider()
-        st.write("")          # ← extra line
-        st.write("")          # ← extra line
-        st.write("")          # ← extra line (this gives you the 2-3 lines you asked for)
+        st.write("")  
+        st.write("")  
+        st.write("")  
         tiebreaker = st.text_input(
             "Tiebreaker - Final game score (just the two scores, e.g. 81 - 74)",
             value=default_tiebreaker,
@@ -91,8 +103,8 @@ if not is_admin:
         elif not tiebreaker:
             st.error("❌ Tiebreaker required")
         else:
-            data["entries"][user_name] = {
-                "name": user_name,
+            data["entries"][user_email] = {
+                "name": user_email,
                 "picks": selected_teams,
                 "tiebreaker": tiebreaker,
                 "score": existing.get("score", 0)
