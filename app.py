@@ -16,7 +16,7 @@ else:
     data = {"entries": {}, "payments": {}}
 
 # ====================== DEADLINE = NOON PACIFIC TIME ======================
-DEADLINE = datetime(2026, 3, 17, 19, 0)  # 12:00 PDT
+DEADLINE = datetime(2026, 3, 17, 19, 0)
 
 # ====================== FULL 64-TEAM LIST ======================
 all_teams = [
@@ -64,7 +64,7 @@ if is_admin:
 
 st.sidebar.success(f"Logged in as {user_email}")
 
-# ====================== PLAYER VIEW (stable single form) ======================
+# ====================== PLAYER VIEW ======================
 if not show_admin:
     st.header(f"👋 Welcome {user_email}, enter your 8 picks")
     st.info("**Rules**: Exactly 8 teams • At most ONE team from seeds 1–6 • Any number of 7+ seeds OK")
@@ -86,7 +86,7 @@ if not show_admin:
                 max_selections=8
             )
             st.divider()
-            # Huge spacing — tiebreaker way down the page (18 blank lines)
+            # Huge spacing — tiebreaker stays way down the page
             for _ in range(18):
                 st.write("")
             tiebreaker = st.text_input(
@@ -122,6 +122,7 @@ if not show_admin:
                 with open(DATA_FILE, "w") as f:
                     json.dump(data, f)
                 st.success("Picks saved! 🎉 You can edit anytime before noon tomorrow.")
+                st.rerun()
 
 # ====================== ADMIN DASHBOARD ======================
 else:
