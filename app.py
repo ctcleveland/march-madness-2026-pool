@@ -78,37 +78,25 @@ if not show_admin:
         st.write("**Your locked picks:**", default_teams)
         st.write("**Your tiebreaker:**", default_tiebreaker)
     else:
-        # Team picker (always visible)
-        selected_teams = st.multiselect(
-            "Select your 8 teams (any combination)",
-            all_teams,
-            default=default_teams,
-            max_selections=8
-        )
+        with st.form("pick_form", clear_on_submit=False):
+            selected_teams = st.multiselect(
+                "Select your 8 teams (any combination)",
+                all_teams,
+                default=default_teams,
+                max_selections=8
+            )
+            st.divider()
+            # MASSIVE SPACING — another 6 lines added (total 18 blank lines)
+            for _ in range(18):
+                st.write("")
+            tiebreaker = st.text_input(
+                "Tiebreaker - Final game score (just the two scores, e.g. 81 - 74)",
+                value=default_tiebreaker,
+                help="Example: 81 - 74"
+            )
+            submitted = st.form_submit_button("✅ Save My Picks")
 
-        # MASSIVE SPACING — 10 blank lines so dropdown can never hide tiebreaker
-        st.divider()
-        st.write("")  
-        st.write("")  
-        st.write("")  
-        st.write("")  
-        st.write("")  
-        st.write("")  
-        st.write("")  
-        st.write("")  
-        st.write("")  
-        st.write("")  
-        st.write("")  
-
-        tiebreaker = st.text_input(
-            "Tiebreaker - Final game score (just the two scores, e.g. 81 - 74)",
-            value=default_tiebreaker,
-            help="Example: 81 - 74"
-        )
-
-        # Always-clickable button
-        if st.button("✅ Save My Picks"):
-            # Validation only on click
+        if submitted:
             seed_count = {}
             for team in selected_teams:
                 if "#" in team:
