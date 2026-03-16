@@ -48,41 +48,55 @@ else:
 
 st.sidebar.success(f"Logged in as {user_name}")
 
-# ====================== PLAYER PICK WIZARD (CORRECT RULES) ======================
+# ====================== PLAYER FORM (always visible + auto-load) ======================
 if not is_admin:
     st.header(f"👋 {user_name}, enter your 8 picks")
     st.info("**Rules**: Exactly 8 teams • At most ONE team from seeds 1–6 • Any number of 7+ seeds OK")
 
-    selected_teams = st.multiselect("Select your 8 teams (any combination)", all_teams, max_selections=8)
+    # Auto-load previous picks if they exist
+    existing = data["entries"].get(user_name, {})
+    default_teams = existing.get("picks", [])
+    default_tiebreaker = existing.get("tiebreaker", "")
 
-    tiebreaker = st.text_input("Tiebreaker - Final game score (just the two scores, e.g. 81 - 74)")
+    with st.form("pick_form"):
+        selected_teams = st.multiselect(
+            "Select your 8 teams",
+            all_teams,
+            default=default_teams,
+            max_selections=8
+        )
+        tiebreaker = st.text_input(
+            "Tiebreaker - Final game score (just the two scores, e.g. 81 - 74)",
+            value=default_tiebreaker
+        )
+        submitted = st.form_submit_button("✅ Save My Picks")
 
-    # Real-time validation for seeds 1-6
-    seed_count = {}
-    for team in selected_teams:
-        if "#" in team:
-            seed = team.split("#")[-1].split(")")[0].strip()
-            if seed.isdigit() and int(seed) <= 6:
-                seed_count[seed] = seed_count.get(seed, 0) + 1
+    if submitted:
+        # Validate seed rule
+        seed_count = {}
+        for team in selected_teams:
+            if "#" in team:
+                seed = team.split("#")[-1].split(")")[0].strip()
+                if seed.isdigit() and int(seed) <= 6:
+                    seed_count[seed] = seed_count.get(seed, 0) + 1
 
-    violations = [f"Seed {s}" for s, cnt in seed_count.items() if cnt > 1]
-    if violations:
-        st.error(f"❌ You picked more than one of these seeds: {', '.join(violations)}")
-    elif len(selected_teams) != 8:
-        st.warning(f"⚠️ You have {len(selected_teams)} teams — need exactly 8")
-    elif not tiebreaker:
-        st.warning("⚠️ Tiebreaker required (just the two scores, e.g. 81 - 74)")
-    else:
-        if st.button("✅ Save My Picks"):
+        violations = [f"Seed {s}" for s, cnt in seed_count.items() if cnt > 1]
+        if violations:
+            st.error(f"❌ You picked more than one of these seeds: {', '.join(violations)}")
+        elif len(selected_teams) != 8:
+            st.error("❌ Must pick exactly 8 teams!")
+        elif not tiebreaker:
+            st.error("❌ Tiebreaker required (just the two scores)")
+        else:
             data["entries"][user_name] = {
                 "name": user_name,
                 "picks": selected_teams,
                 "tiebreaker": tiebreaker,
-                "score": 0
+                "score": existing.get("score", 0)
             }
             with open(DATA_FILE, "w") as f:
                 json.dump(data, f)
-            st.success("Picks saved correctly! 🎉")
+            st.success("Picks saved! 🎉 (You can edit anytime before noon tomorrow)")
 
 # ====================== ADMIN DASHBOARD ======================
 if is_admin:
@@ -115,7 +129,7 @@ if is_admin:
             json.dump(data, f)
         st.success("Saved!")
 
-# ====================== SAVE BUTTON ======================
+# ====================== GLOBAL SAVE ======================
 if st.button("💾 Save All Changes"):
     with open(DATA_FILE, "w") as f:
         json.dump(data, f)
