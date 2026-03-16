@@ -64,7 +64,7 @@ if is_admin:
 
 st.sidebar.success(f"Logged in as {user_email}")
 
-# ====================== PLAYER VIEW (single stable form) ======================
+# ====================== PLAYER VIEW ======================
 if not show_admin:
     st.header(f"👋 Welcome {user_email}, enter your 8 picks")
     st.info("**Rules**: Exactly 8 teams • At most ONE team from seeds 1–6 • Any number of 7+ seeds OK")
@@ -86,8 +86,15 @@ if not show_admin:
                 default=default_teams,
                 max_selections=8
             )
+            tiebreaker = st.text_input(
+                "Tiebreaker - Final game score (just the two scores, e.g. 81 - 74)",
+                value=default_tiebreaker,
+                help="Example: 81 - 74"
+            )
+            submitted = st.form_submit_button("✅ Save My Picks")   # always clickable
 
-            # LIVE VALIDATION (updates instantly inside the form)
+        if submitted:
+            # Validation ONLY on click
             seed_count = {}
             for team in selected_teams:
                 if "#" in team:
@@ -98,29 +105,21 @@ if not show_admin:
             violations = [f"Seed {s}" for s, cnt in seed_count.items() if cnt > 1]
 
             if violations:
-                st.error(f"❌ **Cannot save** — Only ONE team per seed 1–6 allowed.\nMultiple from: {', '.join(violations)}")
+                st.error(f"❌ You picked more than one team from these seeds: {', '.join(violations)}\n\nFix it and try Save again.")
             elif len(selected_teams) != 8:
-                st.warning(f"⚠️ You have selected **{len(selected_teams)} of 8 teams**. Pick exactly 8 to enable Save.")
-
-            tiebreaker = st.text_input(
-                "Tiebreaker - Final game score (just the two scores, e.g. 81 - 74)",
-                value=default_tiebreaker,
-                help="Example: 81 - 74"
-            )
-
-            can_save = (len(selected_teams) == 8) and len(violations) == 0
-            submitted = st.form_submit_button("✅ Save My Picks", disabled=not can_save)
-
-        if submitted:
-            data["entries"][user_email] = {
-                "name": user_email,
-                "picks": selected_teams,
-                "tiebreaker": tiebreaker,
-                "score": existing.get("score", 0)
-            }
-            with open(DATA_FILE, "w") as f:
-                json.dump(data, f)
-            st.success("Picks saved! 🎉 You can edit anytime before noon tomorrow.")
+                st.error(f"❌ You must pick exactly 8 teams (you have {len(selected_teams)}). Fix it and try Save again.")
+            elif not tiebreaker:
+                st.error("❌ Tiebreaker is required (just the two final scores, e.g. 81 - 74).")
+            else:
+                data["entries"][user_email] = {
+                    "name": user_email,
+                    "picks": selected_teams,
+                    "tiebreaker": tiebreaker,
+                    "score": existing.get("score", 0)
+                }
+                with open(DATA_FILE, "w") as f:
+                    json.dump(data, f)
+                st.success("Picks saved! 🎉 You can edit anytime before noon tomorrow.")
 
 # ====================== ADMIN DASHBOARD ======================
 else:
