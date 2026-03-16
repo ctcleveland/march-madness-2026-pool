@@ -64,7 +64,7 @@ if is_admin:
 
 st.sidebar.success(f"Logged in as {user_email}")
 
-# ====================== PLAYER VIEW ======================
+# ====================== PLAYER VIEW (stable single form) ======================
 if not show_admin:
     st.header(f"👋 Welcome {user_email}, enter your 8 picks")
     st.info("**Rules**: Exactly 8 teams • At most ONE team from seeds 1–6 • Any number of 7+ seeds OK")
@@ -78,25 +78,25 @@ if not show_admin:
         st.write("**Your locked picks:**", default_teams)
         st.write("**Your tiebreaker:**", default_tiebreaker)
     else:
-        # Team picker (stable outside form)
-        selected_teams = st.multiselect(
-            "Select your 8 teams (any combination)",
-            all_teams,
-            default=default_teams,
-            max_selections=8
-        )
-        st.divider()
-        # Huge spacing (18 blank lines) — tiebreaker stays way down the page
-        for _ in range(18):
-            st.write("")
-        tiebreaker = st.text_input(
-            "Tiebreaker - Final game score (just the two scores, e.g. 81 - 74)",
-            value=default_tiebreaker,
-            help="Example: 81 - 74"
-        )
+        with st.form("pick_form", clear_on_submit=False):
+            selected_teams = st.multiselect(
+                "Select your 8 teams (any combination)",
+                all_teams,
+                default=default_teams,
+                max_selections=8
+            )
+            st.divider()
+            # Huge spacing — tiebreaker way down the page (18 blank lines)
+            for _ in range(18):
+                st.write("")
+            tiebreaker = st.text_input(
+                "Tiebreaker - Final game score (just the two scores, e.g. 81 - 74)",
+                value=default_tiebreaker,
+                help="Example: 81 - 74"
+            )
+            submitted = st.form_submit_button("✅ Save My Picks")
 
-        # Always clickable
-        if st.button("✅ Save My Picks"):
+        if submitted:
             seed_count = {}
             for team in selected_teams:
                 if "#" in team:
@@ -121,8 +121,7 @@ if not show_admin:
                 }
                 with open(DATA_FILE, "w") as f:
                     json.dump(data, f)
-                st.success("Picks saved! 🎉")
-                st.rerun()  # prevents blank screen
+                st.success("Picks saved! 🎉 You can edit anytime before noon tomorrow.")
 
 # ====================== ADMIN DASHBOARD ======================
 else:
