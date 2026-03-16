@@ -64,7 +64,7 @@ if is_admin:
 
 st.sidebar.success(f"Logged in as {user_email}")
 
-# ====================== PLAYER VIEW ======================
+# ====================== PLAYER VIEW (single stable form) ======================
 if not show_admin:
     st.header(f"👋 Welcome {user_email}, enter your 8 picks")
     st.info("**Rules**: Exactly 8 teams • At most ONE team from seeds 1–6 • Any number of 7+ seeds OK")
@@ -79,31 +79,29 @@ if not show_admin:
         default_teams = existing.get("picks", [])
         default_tiebreaker = existing.get("tiebreaker", "")
 
-        # LIVE MULTISELECT + VALIDATION (updates instantly)
-        selected_teams = st.multiselect(
-            "Select your 8 teams (any combination)",
-            all_teams,
-            default=default_teams,
-            max_selections=8
-        )
-
-        # Real-time rule check
-        seed_count = {}
-        for team in selected_teams:
-            if "#" in team:
-                seed = team.split("#")[-1].split(")")[0].strip()
-                if seed.isdigit() and int(seed) <= 6:
-                    seed_count[seed] = seed_count.get(seed, 0) + 1
-
-        violations = [f"Seed {s}" for s, cnt in seed_count.items() if cnt > 1]
-
-        if violations:
-            st.error(f"❌ **Cannot save** — Only ONE team per seed 1–6 allowed.\nMultiple from: {', '.join(violations)}")
-        elif len(selected_teams) != 8:
-            st.warning(f"⚠️ You have selected **{len(selected_teams)} of 8 teams**. Pick exactly 8 to enable Save.")
-
-        # Form only for tiebreaker + submit (button disabled until valid)
         with st.form("pick_form", clear_on_submit=False):
+            selected_teams = st.multiselect(
+                "Select your 8 teams (any combination)",
+                all_teams,
+                default=default_teams,
+                max_selections=8
+            )
+
+            # LIVE VALIDATION (updates instantly inside the form)
+            seed_count = {}
+            for team in selected_teams:
+                if "#" in team:
+                    seed = team.split("#")[-1].split(")")[0].strip()
+                    if seed.isdigit() and int(seed) <= 6:
+                        seed_count[seed] = seed_count.get(seed, 0) + 1
+
+            violations = [f"Seed {s}" for s, cnt in seed_count.items() if cnt > 1]
+
+            if violations:
+                st.error(f"❌ **Cannot save** — Only ONE team per seed 1–6 allowed.\nMultiple from: {', '.join(violations)}")
+            elif len(selected_teams) != 8:
+                st.warning(f"⚠️ You have selected **{len(selected_teams)} of 8 teams**. Pick exactly 8 to enable Save.")
+
             tiebreaker = st.text_input(
                 "Tiebreaker - Final game score (just the two scores, e.g. 81 - 74)",
                 value=default_tiebreaker,
