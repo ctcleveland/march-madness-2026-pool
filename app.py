@@ -48,7 +48,7 @@ else:
 
 st.sidebar.success(f"Logged in as {user_name}")
 
-# ====================== PLAYER FORM (always visible + auto-load) ======================
+# ====================== PLAYER FORM ======================
 if not is_admin:
     st.header(f"👋 {user_name}, enter your 8 picks")
     st.info("**Rules**: Exactly 8 teams • At most ONE team from seeds 1–6 • Any number of 7+ seeds OK")
@@ -64,9 +64,11 @@ if not is_admin:
             default=default_teams,
             max_selections=8
         )
+        st.divider()  # ← clear visual separation
         tiebreaker = st.text_input(
             "Tiebreaker - Final game score (just the two scores, e.g. 81 - 74)",
-            value=default_tiebreaker
+            value=default_tiebreaker,
+            help="Example: 81 - 74"
         )
         submitted = st.form_submit_button("✅ Save My Picks")
 
@@ -84,7 +86,7 @@ if not is_admin:
         elif len(selected_teams) != 8:
             st.error("❌ Must pick exactly 8 teams!")
         elif not tiebreaker:
-            st.error("❌ Tiebreaker required (just the two scores)")
+            st.error("❌ Tiebreaker required")
         else:
             data["entries"][user_name] = {
                 "name": user_name,
