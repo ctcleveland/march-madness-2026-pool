@@ -70,15 +70,14 @@ if not show_admin:
     st.info("**Rules**: Exactly 8 teams • At most ONE team from seeds 1–6 • Any number of 7+ seeds OK")
 
     existing = data["entries"].get(user_email, {})
+    default_teams = existing.get("picks", [])
+    default_tiebreaker = existing.get("tiebreaker", "")
 
     if datetime.now() > DEADLINE:
         st.warning("**Picks are now locked after the deadline (Noon Pacific Time). No more changes allowed.**")
-        st.write("**Your locked picks:**", existing.get("picks", []))
-        st.write("**Your tiebreaker:**", existing.get("tiebreaker", "None"))
+        st.write("**Your locked picks:**", default_teams)
+        st.write("**Your tiebreaker:**", default_tiebreaker)
     else:
-        default_teams = existing.get("picks", [])
-        default_tiebreaker = existing.get("tiebreaker", "")
-
         with st.form("pick_form", clear_on_submit=False):
             selected_teams = st.multiselect(
                 "Select your 8 teams (any combination)",
@@ -86,15 +85,19 @@ if not show_admin:
                 default=default_teams,
                 max_selections=8
             )
+            st.divider()
+            st.write("")  
+            st.write("")  
+            st.write("")  
             tiebreaker = st.text_input(
                 "Tiebreaker - Final game score (just the two scores, e.g. 81 - 74)",
                 value=default_tiebreaker,
                 help="Example: 81 - 74"
             )
-            submitted = st.form_submit_button("✅ Save My Picks")   # always clickable
+            submitted = st.form_submit_button("✅ Save My Picks")  # always clickable
 
         if submitted:
-            # Validation ONLY on click
+            # Validation on click only
             seed_count = {}
             for team in selected_teams:
                 if "#" in team:
