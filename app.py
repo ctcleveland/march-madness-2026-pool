@@ -78,25 +78,26 @@ if not show_admin:
         st.write("**Your locked picks:**", default_teams)
         st.write("**Your tiebreaker:**", default_tiebreaker)
     else:
-        with st.form("pick_form", clear_on_submit=False):
-            selected_teams = st.multiselect(
-                "Select your 8 teams (any combination)",
-                all_teams,
-                default=default_teams,
-                max_selections=8
-            )
-            st.divider()
-            # MASSIVE SPACING — another 6 lines added (total 18 blank lines)
-            for _ in range(18):
-                st.write("")
-            tiebreaker = st.text_input(
-                "Tiebreaker - Final game score (just the two scores, e.g. 81 - 74)",
-                value=default_tiebreaker,
-                help="Example: 81 - 74"
-            )
-            submitted = st.form_submit_button("✅ Save My Picks")
+        # Team picker + tiebreaker (always visible, outside any form)
+        selected_teams = st.multiselect(
+            "Select your 8 teams (any combination)",
+            all_teams,
+            default=default_teams,
+            max_selections=8
+        )
+        st.divider()
+        # Huge spacing so dropdown never hides tiebreaker (you said "great location" — keeping it)
+        for _ in range(18):
+            st.write("")
+        tiebreaker = st.text_input(
+            "Tiebreaker - Final game score (just the two scores, e.g. 81 - 74)",
+            value=default_tiebreaker,
+            help="Example: 81 - 74"
+        )
 
-        if submitted:
+        # Always-clickable button
+        if st.button("✅ Save My Picks"):
+            # Validation ONLY on click
             seed_count = {}
             for team in selected_teams:
                 if "#" in team:
@@ -122,6 +123,7 @@ if not show_admin:
                 with open(DATA_FILE, "w") as f:
                     json.dump(data, f)
                 st.success("Picks saved! 🎉 You can edit anytime before noon tomorrow.")
+                st.rerun()   # ← This prevents the blank screen after save
 
 # ====================== ADMIN DASHBOARD ======================
 else:
