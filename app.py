@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import json
 import os
+from datetime import datetime
 
 st.set_page_config(page_title="March Madness 2026 Pool", layout="wide", page_icon="🏀")
 st.title("🏀 NCAA March Madness 2026 Pool")
@@ -13,6 +14,9 @@ if os.path.exists(DATA_FILE):
         data = json.load(f)
 else:
     data = {"entries": {}, "payments": {}}
+
+# ====================== DEADLINE = NOON PACIFIC TIME (March 17, 2026) ======================
+DEADLINE = datetime(2026, 3, 17, 19, 0)  # 19:00 UTC = 12:00 PDT
 
 # ====================== ALL TEAMS ======================
 all_teams = [
@@ -32,89 +36,91 @@ all_teams = [
     "Siena (East #16)", "Alabama State (South #16)", "Saint Francis (West #16)", "Wagner (Midwest #16)"
 ]
 
-# ====================== LOGIN FORM (Email is unique ID) ======================
+# ====================== ADMIN EMAILS ======================
+ADMIN_EMAILS = ["ctcleveland@gmail.com", "sdougherty5@cox.net"]
+
+# ====================== LOGIN FORM ======================
 st.sidebar.header("Login")
 email = st.sidebar.text_input("Your Email Address", placeholder="you@email.com")
 password = st.sidebar.text_input("Password", type="password")
+login_button = st.sidebar.button("Login")
 
-col1, col2 = st.sidebar.columns([3, 1])
-login_button = col1.button("Login")
-forgot_button = col2.button("Forgot Password?")
-
-if forgot_button:
-    st.sidebar.info("**Forgot your password?**\n\nContact Stephanie Dougherty:\n- Email: sdougherty5@cox.net\n- Text: (949) 290-0063\nShe will reset it for you.")
+if st.sidebar.button("Forgot Password?"):
+    st.sidebar.info("**Forgot your password?**\n\nContact Stephanie Dougherty:\n- Email: sdougherty5@cox.net\n- Text: (949) 290-0063")
 
 if not login_button:
     st.stop()
 
-# Password check
-is_admin = False
-if password == "march2026":
-    is_admin = True
-elif password == "player2026":
-    is_admin = False
-else:
+user_email = email.strip().lower()
+
+if password not in ["march2026", "player2026"]:
     st.error("Incorrect password")
     st.stop()
 
-user_email = email.strip().lower()
+is_admin = user_email in ADMIN_EMAILS
+
 st.sidebar.success(f"Logged in as {user_email} {'(Admin)' if is_admin else ''}")
 
-# ====================== PLAYER FORM ======================
+# ====================== PLAYER VIEW ======================
 if not is_admin:
     st.header(f"👋 Welcome {user_email}, enter your 8 picks")
     st.info("**Rules**: Exactly 8 teams • At most ONE team from seeds 1–6 • Any number of 7+ seeds OK")
 
     existing = data["entries"].get(user_email, {})
-    default_teams = existing.get("picks", [])
-    default_tiebreaker = existing.get("tiebreaker", "")
 
-    with st.form("pick_form", clear_on_submit=False):
-        selected_teams = st.multiselect(
-            "Select your 8 teams (any combination)",
-            all_teams,
-            default=default_teams,
-            max_selections=8
-        )
-        st.divider()
-        st.write("")  
-        st.write("")  
-        st.write("")  
-        tiebreaker = st.text_input(
-            "Tiebreaker - Final game score (just the two scores, e.g. 81 - 74)",
-            value=default_tiebreaker,
-            help="Example: 81 - 74"
-        )
-        submitted = st.form_submit_button("✅ Save My Picks")
+    if datetime.now() > DEADLINE:
+        st.warning("**Picks are now locked after the deadline (Noon Pacific Time). No more changes allowed.**")
+        st.write("**Your locked picks:**", existing.get("picks", []))
+        st.write("**Your tiebreaker:**", existing.get("tiebreaker", "None"))
+    else:
+        default_teams = existing.get("picks", [])
+        default_tiebreaker = existing.get("tiebreaker", "")
 
-    if submitted:
-        seed_count = {}
-        for team in selected_teams:
-            if "#" in team:
-                seed = team.split("#")[-1].split(")")[0].strip()
-                if seed.isdigit() and int(seed) <= 6:
-                    seed_count[seed] = seed_count.get(seed, 0) + 1
+        with st.form("pick_form", clear_on_submit=False):
+            selected_teams = st.multiselect(
+                "Select your 8 teams (any combination)",
+                all_teams,
+                default=default_teams,
+                max_selections=8
+            )
+            st.divider()
+            st.write("")  
+            st.write("")  
+            st.write("")  
+            tiebreaker = st.text_input(
+                "Tiebreaker - Final game score (just the two scores, e.g. 81 - 74)",
+                value=default_tiebreaker,
+                help="Example: 81 - 74"
+            )
+            submitted = st.form_submit_button("✅ Save My Picks")
 
-        violations = [f"Seed {s}" for s, cnt in seed_count.items() if cnt > 1]
-        if violations:
-            st.error(f"❌ You picked more than one of these seeds: {', '.join(violations)}")
-        elif len(selected_teams) != 8:
-            st.error("❌ Must pick exactly 8 teams!")
-        elif not tiebreaker:
-            st.error("❌ Tiebreaker required")
-        else:
-            data["entries"][user_email] = {
-                "name": user_email,
-                "picks": selected_teams,
-                "tiebreaker": tiebreaker,
-                "score": existing.get("score", 0)
-            }
-            with open(DATA_FILE, "w") as f:
-                json.dump(data, f)
-            st.success("Picks saved! 🎉 You can edit anytime before noon tomorrow.")
+        if submitted:
+            seed_count = {}
+            for team in selected_teams:
+                if "#" in team:
+                    seed = team.split("#")[-1].split(")")[0].strip()
+                    if seed.isdigit() and int(seed) <= 6:
+                        seed_count[seed] = seed_count.get(seed, 0) + 1
+            violations = [f"Seed {s}" for s, cnt in seed_count.items() if cnt > 1]
+            if violations:
+                st.error(f"❌ You picked more than one of these seeds: {', '.join(violations)}")
+            elif len(selected_teams) != 8:
+                st.error("❌ Must pick exactly 8 teams!")
+            elif not tiebreaker:
+                st.error("❌ Tiebreaker required")
+            else:
+                data["entries"][user_email] = {
+                    "name": user_email,
+                    "picks": selected_teams,
+                    "tiebreaker": tiebreaker,
+                    "score": existing.get("score", 0)
+                }
+                with open(DATA_FILE, "w") as f:
+                    json.dump(data, f)
+                st.success("Picks saved! 🎉")
 
 # ====================== ADMIN DASHBOARD ======================
-if is_admin:
+else:
     st.header("👑 Admin Dashboard")
     tab1, tab2, tab3 = st.tabs(["All Entries & Payments", "Bulk Upload", "Leaderboard"])
 
