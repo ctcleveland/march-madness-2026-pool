@@ -32,7 +32,7 @@ all_teams = [
     "Siena (East #16)", "Alabama State (South #16)", "Saint Francis (West #16)", "Wagner (Midwest #16)"
 ]
 
-# ====================== SIMPLE PASSWORD LOGIN ======================
+# ====================== SIMPLE PASSWORD ======================
 password = st.sidebar.text_input("Enter password", type="password")
 is_admin = False
 user_name = "Player"
@@ -53,14 +53,13 @@ if not is_admin:
     st.header(f"👋 {user_name}, enter your 8 picks")
     st.info("**Rules**: Exactly 8 teams • At most ONE team from seeds 1–6 • Any number of 7+ seeds OK")
 
-    # Auto-load previous picks if they exist
     existing = data["entries"].get(user_name, {})
     default_teams = existing.get("picks", [])
     default_tiebreaker = existing.get("tiebreaker", "")
 
-    with st.form("pick_form"):
+    with st.form("pick_form", clear_on_submit=False):
         selected_teams = st.multiselect(
-            "Select your 8 teams",
+            "Select your 8 teams (any combination)",
             all_teams,
             default=default_teams,
             max_selections=8
@@ -72,7 +71,6 @@ if not is_admin:
         submitted = st.form_submit_button("✅ Save My Picks")
 
     if submitted:
-        # Validate seed rule
         seed_count = {}
         for team in selected_teams:
             if "#" in team:
@@ -96,7 +94,7 @@ if not is_admin:
             }
             with open(DATA_FILE, "w") as f:
                 json.dump(data, f)
-            st.success("Picks saved! 🎉 (You can edit anytime before noon tomorrow)")
+            st.success("Picks saved! 🎉 You can edit anytime before noon tomorrow.")
 
 # ====================== ADMIN DASHBOARD ======================
 if is_admin:
