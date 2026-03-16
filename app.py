@@ -86,7 +86,7 @@ if not show_admin:
                 max_selections=8
             )
             st.divider()
-            # Huge spacing — tiebreaker way down the page (18 blank lines)
+            # Huge spacing — tiebreaker way down the page
             for _ in range(18):
                 st.write("")
             tiebreaker = st.text_input(
@@ -122,6 +122,7 @@ if not show_admin:
                 with open(DATA_FILE, "w") as f:
                     json.dump(data, f)
                 st.success("Picks saved! 🎉 You can edit anytime before noon tomorrow.")
+                st.rerun()  # ← THIS LINE STOPS THE BLANK SCREEN
 
 # ====================== ADMIN DASHBOARD ======================
 else:
