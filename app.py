@@ -15,8 +15,8 @@ if os.path.exists(DATA_FILE):
 else:
     data = {"entries": {}, "payments": {}}
 
-# ====================== DEADLINE = NOON PACIFIC TIME (March 17, 2026) ======================
-DEADLINE = datetime(2026, 3, 17, 19, 0)  # 19:00 UTC = 12:00 PDT
+# ====================== DEADLINE = NOON PACIFIC TIME ======================
+DEADLINE = datetime(2026, 3, 17, 19, 0)  # 12:00 PDT
 
 # ====================== ALL TEAMS ======================
 all_teams = [
@@ -43,9 +43,9 @@ ADMIN_EMAILS = ["ctcleveland@gmail.com", "sdougherty5@cox.net"]
 st.sidebar.header("Login")
 email = st.sidebar.text_input("Your Email Address", placeholder="you@email.com")
 password = st.sidebar.text_input("Password", type="password")
-login_button = st.sidebar.button("Login")
+login_button = st.sidebar.button("Login", key="login_btn")
 
-if st.sidebar.button("Forgot Password?"):
+if st.sidebar.button("Forgot Password?", key="forgot_btn"):
     st.sidebar.info("**Forgot your password?**\n\nContact Stephanie Dougherty:\n- Email: sdougherty5@cox.net\n- Text: (949) 290-0063")
 
 if not login_button:
@@ -58,11 +58,14 @@ if password not in ["march2026", "player2026"]:
     st.stop()
 
 is_admin = user_email in ADMIN_EMAILS
+show_admin = False
+if is_admin:
+    show_admin = st.sidebar.checkbox("🔧 Switch to Admin Dashboard", value=False, key="admin_toggle")
 
-st.sidebar.success(f"Logged in as {user_email} {'(Admin)' if is_admin else ''}")
+st.sidebar.success(f"Logged in as {user_email}")
 
-# ====================== PLAYER VIEW ======================
-if not is_admin:
+# ====================== PLAYER VIEW (default for everyone) ======================
+if not show_admin:
     st.header(f"👋 Welcome {user_email}, enter your 8 picks")
     st.info("**Rules**: Exactly 8 teams • At most ONE team from seeds 1–6 • Any number of 7+ seeds OK")
 
@@ -117,7 +120,7 @@ if not is_admin:
                 }
                 with open(DATA_FILE, "w") as f:
                     json.dump(data, f)
-                st.success("Picks saved! 🎉")
+                st.success("Picks saved! 🎉 You can edit anytime before noon tomorrow.")
 
 # ====================== ADMIN DASHBOARD ======================
 else:
@@ -128,7 +131,7 @@ else:
         if data["entries"]:
             df = pd.DataFrame.from_dict(data["entries"], orient="index")
             df["Payment Confirmed"] = [data["payments"].get(k, False) for k in df.index]
-            edited = st.data_editor(df, use_container_width=True)
+            edited = st.data_editor(df, width="stretch")  # fixed deprecation
             for idx in edited.index:
                 data["payments"][idx] = edited.loc[idx, "Payment Confirmed"]
             st.success("✅ Payments updated live")
@@ -137,7 +140,7 @@ else:
 
     with tab2:
         uploaded = st.file_uploader("Upload CSV", type=["csv"])
-        if uploaded and st.button("Import All"):
+        if uploaded and st.button("Import All", key="import_btn"):
             st.success("Imported!")
 
     with tab3:
@@ -145,13 +148,13 @@ else:
             lb = pd.DataFrame.from_dict(data["entries"], orient="index")[["name", "score"]]
             st.dataframe(lb.sort_values("score", ascending=False))
 
-    if st.button("💾 Save All Changes"):
+    if st.button("💾 Save All Changes", key="admin_save"):
         with open(DATA_FILE, "w") as f:
             json.dump(data, f)
         st.success("Saved!")
 
 # ====================== GLOBAL SAVE ======================
-if st.button("💾 Save All Changes"):
+if st.button("💾 Save All Changes", key="global_save"):
     with open(DATA_FILE, "w") as f:
         json.dump(data, f)
     st.success("Everything saved!")
