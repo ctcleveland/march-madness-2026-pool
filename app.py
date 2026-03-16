@@ -86,31 +86,36 @@ if not show_admin:
                 default=default_teams,
                 max_selections=8
             )
-            st.divider()
-            st.write("")  
-            st.write("")  
-            st.write("")  
-            tiebreaker = st.text_input(
-                "Tiebreaker - Final game score (just the two scores, e.g. 81 - 74)",
-                value=default_tiebreaker,
-                help="Example: 81 - 74"
-            )
-            submitted = st.form_submit_button("✅ Save My Picks")
 
-        if submitted:
+            # LIVE VALIDATION (runs on every change)
             seed_count = {}
             for team in selected_teams:
                 if "#" in team:
                     seed = team.split("#")[-1].split(")")[0].strip()
                     if seed.isdigit() and int(seed) <= 6:
                         seed_count[seed] = seed_count.get(seed, 0) + 1
+
             violations = [f"Seed {s}" for s, cnt in seed_count.items() if cnt > 1]
+
             if violations:
-                st.error(f"❌ You picked more than one of these seeds: {', '.join(violations)}")
+                st.error(f"❌ **Cannot save** — You can only pick **one** team from each seed 1–6.\nYou have multiple from: {', '.join(violations)}")
             elif len(selected_teams) != 8:
-                st.error("❌ Must pick exactly 8 teams!")
-            elif not tiebreaker:
-                st.error("❌ Tiebreaker required")
+                st.warning(f"⚠️ You must select exactly 8 teams (you have {len(selected_teams)})")
+
+            tiebreaker = st.text_input(
+                "Tiebreaker - Final game score (just the two scores, e.g. 81 - 74)",
+                value=default_tiebreaker,
+                help="Example: 81 - 74"
+            )
+
+            # Button is disabled until everything is valid
+            can_save = (len(selected_teams) == 8) and len(violations) == 0
+            submitted = st.form_submit_button("✅ Save My Picks", disabled=not can_save)
+
+        if submitted:
+            # Final safety check (should never trigger because button was disabled)
+            if len(selected_teams) != 8 or violations:
+                st.error("Please fix the errors above before saving.")
             else:
                 data["entries"][user_email] = {
                     "name": user_email,
